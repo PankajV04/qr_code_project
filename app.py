@@ -81,6 +81,9 @@ def form(unique_id):
         country = request.form['country']
         comments = request.form['comments']
 
+        # Debugging Output
+        print(f"Received Data: {name}, {email}, {phone}, {dob}, {gender}, {country}, {comments}")
+
         # Save data to the database
         submission = UserSubmission(
             name=name,
@@ -89,7 +92,9 @@ def form(unique_id):
             dob=dob,
             gender=gender,
             country=country,
-            comments=comments
+            comments=comments,
+            qr_code_path=None,  # Default value
+            expiry_date=None    # Default value
         )
         db.session.add(submission)
         db.session.commit()
@@ -103,7 +108,6 @@ def form(unique_id):
             gender=gender,
             country=country,
             comments=comments,
-            submission_id=submission.id
         )
 
     return render_template('form.html')
