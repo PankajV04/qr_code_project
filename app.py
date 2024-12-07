@@ -99,6 +99,7 @@ def form(unique_id):
         db.session.add(submission)
         db.session.commit()
 
+        # Pass submission_id to the template
         return render_template(
             'success.html',
             name=name,
@@ -108,9 +109,11 @@ def form(unique_id):
             gender=gender,
             country=country,
             comments=comments,
+            submission_id=submission.id  # Pass the ID here
         )
 
     return render_template('form.html')
+
 
 @app.route('/generate_user_qr/<int:id>')
 def generate_user_qr(id):
