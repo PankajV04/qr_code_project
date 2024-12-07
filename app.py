@@ -114,7 +114,8 @@ def generate_user_qr(id):
 
     # Encode user details into the QR code
     qr_data = f"Name: {user.name}\nEmail: {user.email}\nPhone: {user.phone}\nDOB: {user.dob}\nGender: {user.gender}\nCountry: {user.country}"
-    
+
+    # Generate QR Code
     qr = qrcode.QRCode(
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_L,
@@ -133,7 +134,11 @@ def generate_user_qr(id):
     db.session.commit()
 
     # Render the page to display/download the QR code
-    return render_template('user_qr.html', qr_image=qr_filename, user=user)
+    return render_template(
+        'user_qr.html',
+        qr_image=url_for('static', filename=f'qr_codes/{user.id}_id_card.png'),
+        user=user
+    )
 
 @app.route('/admin')
 def admin():
@@ -163,4 +168,4 @@ def edit_submission(id):
     return render_template('edit.html', submission=submission)
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(host='0.0.0.0', port=5000, debug=True)
