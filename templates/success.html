@@ -15,6 +15,10 @@
             <p><strong>Gender:</strong> {{ gender }}</p>
             <p><strong>Country:</strong> {{ country }}</p>
             <p><strong>Comments:</strong> {{ comments }}</p>
+
+            <a href="{{ url_for('generate_user_qr', id=submission_id) }}" class="btn btn-primary mt-3">
+                Generate Your QR Code ID
+            </a>
         </div>
     </div>
 </body>

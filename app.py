@@ -32,6 +32,7 @@ class UserSubmission(db.Model):
     gender = db.Column(db.String(10), nullable=False)
     country = db.Column(db.String(50), nullable=False)
     comments = db.Column(db.Text, nullable=True)
+    qr_code_path = db.Column(db.String(200), nullable=True)
 
 # Create Database Tables
 with app.app_context():
@@ -60,7 +61,7 @@ def generate_qr():
 
     # Resize QR Code to 2cm x 2cm (236x236 pixels at 300 DPI)
     desired_size = (236, 236)
-    img = img.resize(desired_size, Image.Resampling.LANCZOS)  # Updated Resampling Method
+    img = img.resize(desired_size, Image.Resampling.LANCZOS)
 
     # Save QR Code
     qr_filename = f"{qr_code_dir}/{unique_id}.png"
@@ -92,9 +93,47 @@ def form(unique_id):
         db.session.add(submission)
         db.session.commit()
 
-        return render_template('success.html', name=name, email=email, phone=phone, dob=dob, gender=gender, country=country, comments=comments)
+        return render_template(
+            'success.html',
+            name=name,
+            email=email,
+            phone=phone,
+            dob=dob,
+            gender=gender,
+            country=country,
+            comments=comments,
+            submission_id=submission.id
+        )
 
     return render_template('form.html')
+
+@app.route('/generate_user_qr/<int:id>')
+def generate_user_qr(id):
+    # Fetch the user details from the database
+    user = UserSubmission.query.get_or_404(id)
+
+    # Encode user details into the QR code
+    qr_data = f"Name: {user.name}\nEmail: {user.email}\nPhone: {user.phone}\nDOB: {user.dob}\nGender: {user.gender}\nCountry: {user.country}"
+    
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(qr_data)
+    qr.make(fit=True)
+
+    img = qr.make_image(fill_color="black", back_color="white")
+    qr_filename = f"{qr_code_dir}/{user.id}_id_card.png"
+    img.save(qr_filename)
+
+    # Update database with QR code path
+    user.qr_code_path = qr_filename
+    db.session.commit()
+
+    # Render the page to display/download the QR code
+    return render_template('user_qr.html', qr_image=qr_filename, user=user)
 
 @app.route('/admin')
 def admin():
