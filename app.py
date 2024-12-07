@@ -44,7 +44,7 @@ def index():
 @app.route('/generate_qr', methods=['POST'])
 def generate_qr():
     unique_id = os.urandom(4).hex()
-    redirect_url = f"http://{local_ip}:5000/form/{unique_id}"
+    redirect_url = f"{request.host_url}form/{unique_id}"
 
     # Generate QR Code
     qr = qrcode.QRCode(
