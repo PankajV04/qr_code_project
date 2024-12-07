@@ -4,7 +4,7 @@ import qrcode
 import os
 import socket
 from PIL import Image
-from datetime import datetime
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
@@ -33,6 +33,7 @@ class UserSubmission(db.Model):
     country = db.Column(db.String(50), nullable=False)
     comments = db.Column(db.Text, nullable=True)
     qr_code_path = db.Column(db.String(200), nullable=True)
+    expiry_date = db.Column(db.Date, nullable=True)  # New column for expiry dates
 
 # Create Database Tables
 with app.app_context():
@@ -109,13 +110,10 @@ def form(unique_id):
 
 @app.route('/generate_user_qr/<int:id>')
 def generate_user_qr(id):
-    # Fetch the user details from the database
     user = UserSubmission.query.get_or_404(id)
 
-    # Encode user details into the QR code
-    qr_data = f"Name: {user.name}\nEmail: {user.email}\nPhone: {user.phone}\nDOB: {user.dob}\nGender: {user.gender}\nCountry: {user.country}"
-
-    # Generate QR Code
+    # Generate QR Code with Profile URL
+    qr_data = f"{request.host_url}profile/{user.id}"
     qr = qrcode.QRCode(
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_L,
@@ -135,16 +133,26 @@ def generate_user_qr(id):
     qr_filename = f"{qr_code_dir}/{user.id}_id_card.png"
     img.save(qr_filename)
 
-    # Update database with QR code path
+    # Add expiry date (30 days from today)
     user.qr_code_path = qr_filename
+    user.expiry_date = datetime.utcnow().date() + timedelta(days=30)
     db.session.commit()
 
-    # Render the page to display/download the QR code
     return render_template(
         'user_qr.html',
         qr_image=url_for('static', filename=f'qr_codes/{user.id}_id_card.png'),
         user=user
     )
+
+@app.route('/profile/<int:id>')
+def profile(id):
+    user = UserSubmission.query.get_or_404(id)
+
+    # Check if the QR code has expired
+    if user.expiry_date and user.expiry_date < datetime.utcnow().date():
+        return "This QR code has expired.", 403
+
+    return render_template('profile.html', user=user)
 
 @app.route('/admin')
 def admin():
