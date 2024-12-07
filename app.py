@@ -126,6 +126,12 @@ def generate_user_qr(id):
     qr.make(fit=True)
 
     img = qr.make_image(fill_color="black", back_color="white")
+
+    # Resize the QR code to 236x236 pixels (2cm x 2cm at 300 DPI)
+    desired_size = (236, 236)
+    img = img.resize(desired_size, Image.Resampling.LANCZOS)
+
+    # Save the QR Code with a unique filename
     qr_filename = f"{qr_code_dir}/{user.id}_id_card.png"
     img.save(qr_filename)
 
@@ -168,4 +174,4 @@ def edit_submission(id):
     return render_template('edit.html', submission=submission)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(debug=False)
